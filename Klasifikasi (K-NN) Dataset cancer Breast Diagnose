@@ -1,0 +1,57 @@
+import pandas as pd
+import numpy as np
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
+
+# 1. Load data dari file CSV yang diunggah
+df = pd.read_csv('data.csv')
+
+# Membersihkan data: Menghapus kolom 'id' dan 'Unnamed: 32' (jika ada) karena tidak diperlukan untuk prediksi
+df = df.drop(columns=['id', 'Unnamed: 32'], errors='ignore')
+
+# 2. Bagi data menjadi fitur (X) dan target (y)
+# Target kita adalah kolom 'diagnosis'
+X = df.drop('diagnosis', axis=1)
+y = df['diagnosis']
+
+# Mengubah target menjadi angka (M=1, B=0) agar sesuai dengan logika kodingan awal
+y = y.map({'M': 1, 'B': 0})
+
+# 3. Bagi data menjadi data latih dan data uji
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+# 4. Skala fitur menggunakan StandardScaler
+scaler = StandardScaler()
+X_train = scaler.fit_transform(X_train)
+X_test = scaler.transform(X_test)
+
+# 5. Bangun model k-Nearest Neighbor
+k = 5  # Jumlah tetangga terdekat
+model = KNeighborsClassifier(n_neighbors=k)
+model.fit(X_train, y_train)
+
+# 6. Prediksi pada data uji
+y_pred = model.predict(X_test)
+
+# 7. Evaluasi model
+accuracy = accuracy_score(y_test, y_pred)
+print("Akurasi:", accuracy)
+
+print("\nLaporan Klasifikasi:")
+print(classification_report(y_test, y_pred))
+
+print("\nMatriks Konfusi:")
+print(confusion_matrix(y_test, y_pred))
+
+# 8. Contoh penggunaan model untuk prediksi data baru
+# Mengambil satu baris dari data asli sebagai contoh input (baris pertama)
+new_sample = X.iloc[0:1].values 
+new_sample_scaled = scaler.transform(new_sample)
+prediction = model.predict(new_sample_scaled)
+
+if prediction[0] == 1:
+    print("\nPasien baru didiagnosis memiliki risiko Breast Cancer (Malignant).")
+else:
+    print("\nPasien baru didiagnosis tidak memiliki risiko Breast Cancer (Benign).")
